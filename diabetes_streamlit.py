@@ -17,7 +17,7 @@ if css_path.exists():
 
 # Carga de datos
 
-file_path = 'datasets/diabetes_risk_dataset.csv'
+file_path = 'diabetes_risk_dataset.csv'
 df = pd.read_csv(file_path, sep=';')
 
 # TRADUCCIÓN
