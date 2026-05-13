@@ -2,6 +2,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 
@@ -22,10 +27,8 @@ mapeo_nombres = {
     'waist_circumference_cm': 'Circunferencia_cintura_cm'
 }
 
-def regresion(df):
+def regresion(X, y):
     # Definir características (X) y objetivo (y)
-    X = df.drop(['Patient_ID', 'diabetes_risk_score', 'diabetes_risk_category', 'Gender_Mapped', 'Physical_Activity_Level_Mapped', 'Diabetes_Risk_Category_Mapped'], axis=1)
-    y = df['diabetes_risk_score']
 
     # Identificar columnas categóricas y numéricas
     categorical_features = X.select_dtypes(include=['object']).columns
@@ -39,7 +42,6 @@ def regresion(df):
     # Dividir los datos en conjuntos de entrenamiento y prueba.
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    from sklearn.ensemble import RandomForestRegressor
 
     # Crea una canalización que primero preprocese los datos y luego entrene el modelo.
     model_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
@@ -47,7 +49,6 @@ def regresion(df):
 
     # Entrenar al modelo
     model_pipeline.fit(X_train, y_train)
-    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
     # Realiza predicciones en el conjunto de prueba
     y_pred = model_pipeline.predict(X_test)
@@ -109,3 +110,42 @@ def regresion(df):
     importance_df['Feature_Mapped'] = importance_df['Feature'].apply(map_feature_name)
 
     return importance_df, r2, mae, mse, rmse
+
+
+def entrenar_y_evaluar_clasificador(X, y):
+    categorical_features = X.select_dtypes(include=['object']).columns
+    numerical_features = X.select_dtypes(include=['int64', 'float64']).columns
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numerical_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+        ])
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    # Cambio de solver a 'lbfgs' para soportar multiclase
+    pipeline = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('classifier', LogisticRegression(
+                random_state=42, 
+                solver='lbfgs',      # Soporta multiclase
+                max_iter=1000,       # Aumentado para asegurar convergencia
+                class_weight='balanced'
+            ))
+        ])
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+
+    # Métricas
+    acc = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, output_dict=True)
+    matrix = confusion_matrix(y_test, y_pred)
+    
+    # Extraer etiquetas únicas para los ejes de la matriz
+    labels = sorted(y.unique())
+    
+    return acc, report, matrix, labels

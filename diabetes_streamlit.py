@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
-from regresion_diabetes import mapeo_nombres, regresion
+from regresion_diabetes import mapeo_nombres, regresion, entrenar_y_evaluar_clasificador
 
 # Configuración de la página
 st.set_page_config(
@@ -56,7 +56,7 @@ df['sleep_category'] = pd.cut(df['sleep_hours'], bins=bins_sleep, labels=labels_
 
 # --- PALETAS ---
 riesgo = ['#7FDED5', '#F8E8B7', '#F25E7C']
-herencia = ['#F29BB2', '#766FD8']
+herencia = ["#A19DD6","#8DD9E0",]
 
 # --- SIDEBAR: FILTROS ---
 st.sidebar.header("Filtros de Análisis")
@@ -146,8 +146,37 @@ for col, (title, value) in zip(cols, metrics):
 
 
 # --- SECCIÓN 2: TABS DE ANÁLISIS ---
-tab1, tab2,tab_biom, tab_habits, tab_regresion = st.tabs(["Score y Categorías de Riesgo", "Analisis BMI","Ingesta Calórica y de Azúcar", "Hábitos y Estilo de Vida", "Regresión Logística"])
+tab_demo, tab1, tab2,tab_biom, tab_habits, tab_regresion = st.tabs(["Datos demográficos","Score y Categorías de Riesgo", "Analisis BMI","Ingesta Calórica y de Azúcar", "Hábitos y Estilo de Vida", "Regresión y Clasificación"])
 
+with tab_demo:
+    fig_demo = px.histogram(filtered_df,
+                            x='age', 
+                            color='Gender_Mapped', 
+                            nbins=30, barmode="group", 
+                            color_discrete_sequence=herencia,
+                            title='Ditribución de Género por Edad',
+                            labels={'age': 'Edad', 'Gender_Mapped': 'Género'})
+    fig_demo.update_layout(margin = dict(t=60, l=40, r=40, b=40),
+                  title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
+    st.plotly_chart(fig_demo,use_container_width=True, width='stretch', key='chart-histograma')
+
+    filtered_df['Rango_edad'] = pd.cut(x=filtered_df['age'], labels=['18-24', '25-44','45-64','+65'], bins=[0, 24, 44, 64, 100])
+    tabla = filtered_df.groupby(['Gender_Mapped', 'Rango_edad'])['Diabetes_Risk_Category_Mapped'].value_counts().reset_index()
+    tabla = tabla.rename(columns={'count':'Cantidad'})
+    
+    fig_gen_riesgo = px.density_heatmap(
+        tabla,x='Rango_edad', y='Gender_Mapped', z='Cantidad', 
+        facet_col='Diabetes_Risk_Category_Mapped',
+        color_continuous_scale="Purp",
+        title='Cantidad de Pacientes por Tipo de Riesgo, Género y Edad',
+        labels={'Rango_edad': 'Rango Edad', 'Gender_Mapped': 'Género', 'Cantidad': "Pacientes", 'Diabetes_Risk_Category_Mapped':'Categoría'},
+        text_auto=True
+    )
+    
+    fig_gen_riesgo.update_layout(margin = dict(t=60, l=40, r=40, b=40),
+                  title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
+    fig_gen_riesgo.update_coloraxes(showscale=False)
+    st.plotly_chart(fig_gen_riesgo, use_container_width=True, width='stretch', key='chart-r')
 with tab1:
     c1, c2 = st.columns([60,40])
 
@@ -163,7 +192,7 @@ with tab1:
         )
         fig_hist.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_hist, use_container_width=True, width='stretch', key='chart-histograma')
+        st.plotly_chart(fig_hist, use_container_width=True, width='stretch', key='chart-hist')
 
     with c2:
         fig_pie = px.pie(
@@ -258,26 +287,41 @@ with tab_biom:
 with tab_habits:
     
     # Comparativa Estrés vs Riesgo
-    stress_impact = filtered_df.groupby(['stress_category', 'Physical_Activity_Level_Mapped'])['diabetes_risk_score'].mean().reset_index()
-    fig_stress = px.bar(stress_impact, x='stress_category', y='diabetes_risk_score',
-                        title="Riesgo Promedio según Nivel de Estrés", facet_col= "Physical_Activity_Level_Mapped",
-                        color='stress_category', color_discrete_sequence=px.colors.sequential.Burg,
+    fig_stress = px.box(filtered_df, x='stress_category', y='diabetes_risk_score', boxmode='group',
+                        title="Riesgo según Nivel de Estrés", facet_col= "Physical_Activity_Level_Mapped", color='stress_category',
                         labels={'diabetes_risk_score': 'Riesgo de Diabetes', 'stress_category':'Nivel de Estrés',
-                                "Physical_Activity_Level_Mapped": "Nivel de Actividad"},
-                                category_orders={'Physical_Activity_Level_Mapped': ['Bajo', 'Moderado', 'Alto']})
+                                "Physical_Activity_Level_Mapped": "Nivel de Actividad"}, color_discrete_sequence=px.colors.sequential.Burg,
+                        category_orders={'Physical_Activity_Level_Mapped': ['Bajo', 'Moderado', 'Alto'], 'stress_category': ['Bajo (1-3)', 'Moderado (4-7)', 'Alto (8-10)']})
+    fig_stress.add_hline(y=0, line_width=0, line_dash="dash", line_color=riesgo[1])
+    fig_stress.add_hline(y=35, line_width=3, line_dash="dash", line_color=riesgo[1])
+    fig_stress.add_hline(y=65, line_width=3, line_dash="dash", line_color=riesgo[2])
+    
+    fig_stress.add_hrect(y0=35, y1=65, line_width=0, fillcolor=riesgo[1], opacity=0.05)
+    fig_stress.add_hrect(y0=0, y1=35, line_width=0, fillcolor=riesgo[0], opacity=0.05)
+    fig_stress.add_hrect(y0=65, y1=100, line_width=0, fillcolor=riesgo[2], opacity=0.05)
+
     fig_stress.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
+
     st.plotly_chart(fig_stress, use_container_width=True, width='stretch', key='chart-estres')
 
     
     # Comparativa Sueño vs Riesgo
-    sleep_impact = filtered_df.groupby(['sleep_category', 'Physical_Activity_Level_Mapped'])['diabetes_risk_score'].mean().reset_index()
-    fig_sleep = px.bar(sleep_impact, x='sleep_category', y='diabetes_risk_score',
-                        title="Riesgo Promedio según Horas de Sueño", facet_col= "Physical_Activity_Level_Mapped",
+    fig_sleep = px.box(filtered_df, x='sleep_category', y='diabetes_risk_score', boxmode='group',
+                        title="Riesgo según Horas de Sueño", facet_col= "Physical_Activity_Level_Mapped",
                         color='sleep_category', color_discrete_sequence=px.colors.sequential.Teal_r,
                         labels={'sleep_category': 'Nivel de Sueño', 'diabetes_risk_score': 'Riesgo de Diabetes',
                                 "Physical_Activity_Level_Mapped": "Nivel de Actividad"},
                                 category_orders={'Physical_Activity_Level_Mapped': ['Bajo', 'Moderado', 'Alto']})
+    fig_sleep.add_hline(y=0, line_width=0, line_dash="dash", line_color=riesgo[1])
+    fig_sleep.add_hline(y=35, line_width=3, line_dash="dash", line_color=riesgo[1])
+    fig_sleep.add_hline(y=65, line_width=3, line_dash="dash", line_color=riesgo[2])
+    
+    fig_sleep.add_hrect(y0=35, y1=65, line_width=0, fillcolor=riesgo[1], opacity=0.05)
+    fig_sleep.add_hrect(y0=0, y1=35, line_width=0, fillcolor=riesgo[0], opacity=0.05)
+    fig_sleep.add_hrect(y0=65, y1=100, line_width=0, fillcolor=riesgo[2], opacity=0.05)
+    
+
     fig_sleep.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
     st.plotly_chart(fig_sleep, use_container_width=True, width='stretch', key='chart-suenio')
@@ -305,8 +349,15 @@ with tab_regresion:
 
     st.plotly_chart(fig_heat, use_container_width=True, key='chart-corr')
 
-    importance_df, r2, mae, mse, rmse = regresion(df)
-    fig = px.bar(data_frame=importance_df, x='Importance', y='Feature_Mapped', 
+    st.subheader('Regresión Random Forest')
+
+    st.header("Análisis de Predicción de Riesgo")
+    
+    X_all = df.drop(['Patient_ID', 'diabetes_risk_score', 'diabetes_risk_category', 'Gender_Mapped', 'Physical_Activity_Level_Mapped', 'Diabetes_Risk_Category_Mapped', 'stress_category', 'sleep_category'], axis=1)
+    y = df['diabetes_risk_score']
+
+    importance_df_all, r2_all, mae_all, mse_all, rmse_all = regresion(X_all, y)
+    fig = px.bar(data_frame=importance_df_all, x='Importance', y='Feature_Mapped', 
                  color_discrete_sequence=['#F25E7C'], 
                  title='Importancia de las Variables en el Modelo Random Forest (Predicción de Riesgo de Diabetes)',
                  labels={'Importance': 'Importancia (Gini Impurity Decrease)', 'Feature_Mapped': 'Variable'})
@@ -315,49 +366,109 @@ with tab_regresion:
 
     st.plotly_chart(fig, use_container_width=True, width='stretch', key='chart-importancia')
 
+    st.subheader('Comparativa de Modelos: Random Forest')
+    # 2. Modelo con variables seleccionadas
+    X_subset = df[['bmi', 'fasting_glucose_level']]
+    y = df['diabetes_risk_score']
+    importance_df_sub, r2_sub, mae_sub, mse_sub, rmse_sub = regresion(X_subset, y)
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(
-            f"""
-            <div>
-                <p class="tagline">R-squared:</p>
-                    <div class="stat-value">{f"{r2:.4f}"}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )     
+    # --- Creación de la tabla comparativa ---
+    # Creamos un diccionario con los resultados
+    metricas_comparativas = {
+        "Métrica": ["R-squared (R2)", "Mean Absolute Error (MAE)", "Mean Squared Error (MSE)", "Root Mean Squared Error (RMSE)"],
+        "Todas las Variables": [r2_all, mae_all, mse_all, rmse_all],
+        "Solo IMC y Glucosa": [r2_sub, mae_sub, mse_sub, rmse_sub]
+    }
 
-    with c2:
-        st.markdown(
-            f"""
-            <div>
-                <p class="tagline">Mean Absolute Error (MAE):</p>
-                    <div class="stat-value">{f"{mae:.4f}"}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )   
+    df_metrics = pd.DataFrame(metricas_comparativas)
 
-    with c3:
-        st.markdown(
-            f"""
-            <div>
-                <p class="tagline">Mean Squared Error (MSE):</p>
-                    <div class="stat-value">{f"{mse:.4f}"}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )   
+    # Formateamos los números a 4 decimales para la visualización
+    df_metrics_style = df_metrics.style.format({
+        "Todas las Variables": "{:.4f}",
+        "Solo IMC y Glucosa": "{:.4f}"
+    })
 
-    with c4:
-        st.markdown(
-            f"""
-            <div>
-                <p class="tagline">Root Mean Squared Error (RMSE):</p>
-                    <div class="stat-value">{f"{rmse:.4f}"}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )      
-    
+    # Mostramos la tabla
+    st.table(df_metrics_style)
+
+    # Opcional: Resaltar cuál es mejor (si el R2 es mayor, resaltarlo)
+    st.info("**Nota:** Un R2 más cercano a 1 y errores (MAE/RMSE) más bajos indican un mejor ajuste.")
+
+    X_clf = df.drop(['Patient_ID', 'diabetes_risk_score', 'diabetes_risk_category', 'Gender_Mapped', 'Physical_Activity_Level_Mapped', 'Diabetes_Risk_Category_Mapped'], axis=1)
+    y_clf = df['Diabetes_Risk_Category_Mapped']
+
+    st.subheader('Regresión Logística (Todas las variables)')
+
+    st.header("Análisis de Clasificación de Riesgo")
+
+    # Ejecución automática al cargar el dashboard
+    acc, report, matrix, labels = entrenar_y_evaluar_clasificador(X_clf, y_clf)
+
+    # Indicador visual rápido
+    st.metric("Exactitud del Modelo (Accuracy)", f"{acc:.2%}")
+
+    col1, col2 = st.columns([1, 1.2])
+
+    with col1:
+        st.write("### Matriz de Confusión")
+        fig_cm = px.imshow(
+            matrix,
+            text_auto=True,
+            labels=dict(x="Predicción", y="Valor Real", color="Casos"),
+            x=[str(l) for l in labels],
+            y=[str(l) for l in labels],
+            color_continuous_scale='Burg',
+            aspect="auto"
+        )
+        fig_cm.update_layout(margin=dict(t=20, b=20, l=20, r=20))
+        st.plotly_chart(fig_cm, use_container_width=True, width='stretch', key='chart-matriz')
+
+    with col2:
+        st.write("### Reporte de Métricas")
+        df_report = pd.DataFrame(report).transpose()
+        # Limpiamos el dataframe para mostrar solo métricas principales
+        st.dataframe(
+            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0),
+            use_container_width=True, width='stretch'
+        )
+
+    st.info("El modelo utiliza un ajuste de pesos balanceado para compensar clases con pocos datos.")
+
+    st.subheader('Regresión logística (Solo IMC y Glucosa)')
+    X_clf = df[['bmi', 'fasting_glucose_level']]
+
+    st.header("Análisis de Clasificación de Riesgo")
+
+    # Ejecución automática al cargar el dashboard
+    acc, report, matrix, labels = entrenar_y_evaluar_clasificador(X_clf, y_clf)
+
+    # Indicador visual rápido
+    st.metric("Exactitud del Modelo (Accuracy)", f"{acc:.2%}")
+
+    col1, col2 = st.columns([1, 1.2])
+
+    with col1:
+        st.write("### Matriz de Confusión")
+        fig_cm = px.imshow(
+            matrix,
+            text_auto=True,
+            labels=dict(x="Predicción", y="Valor Real", color="Casos"),
+            x=[str(l) for l in labels],
+            y=[str(l) for l in labels],
+            color_continuous_scale='Burg',
+            aspect="auto", zmin=0.4
+        )
+        fig_cm.update_layout(margin=dict(t=20, b=20, l=20, r=20))
+        st.plotly_chart(fig_cm, use_container_width=True, width='stretch', key='chart-confusion'
+        )
+
+    with col2:
+        st.write("### Reporte de Métricas")
+        df_report = pd.DataFrame(report).transpose()
+        # Limpiamos el dataframe para mostrar solo métricas principales
+        st.dataframe(
+            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0),
+            use_container_width=True, width='stretch'
+        )
+
+    st.info("El modelo utiliza un ajuste de pesos balanceado para compensar clases con pocos datos.")
