@@ -158,7 +158,7 @@ with tab_demo:
                             labels={'age': 'Edad', 'Gender_Mapped': 'Género'})
     fig_demo.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-    st.plotly_chart(fig_demo,use_container_width=True, width='stretch', key='chart-histograma')
+    st.plotly_chart(fig_demo, width='stretch', key='chart-histograma')
 
     filtered_df['Rango_edad'] = pd.cut(x=filtered_df['age'], labels=['18-24', '25-44','45-64','+65'], bins=[0, 24, 44, 64, 100])
     tabla = filtered_df.groupby(['Gender_Mapped', 'Rango_edad'])['Diabetes_Risk_Category_Mapped'].value_counts().reset_index()
@@ -176,7 +176,7 @@ with tab_demo:
     fig_gen_riesgo.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
     fig_gen_riesgo.update_coloraxes(showscale=False)
-    st.plotly_chart(fig_gen_riesgo, use_container_width=True, width='stretch', key='chart-r')
+    st.plotly_chart(fig_gen_riesgo, width='stretch', key='chart-r')
 with tab1:
     c1, c2 = st.columns([60,40])
 
@@ -192,7 +192,7 @@ with tab1:
         )
         fig_hist.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_hist, use_container_width=True, width='stretch', key='chart-hist')
+        st.plotly_chart(fig_hist, width='stretch', key='chart-hist')
 
     with c2:
         fig_pie = px.pie(
@@ -205,7 +205,7 @@ with tab1:
         )
         fig_pie.update_layout(margin = dict(t=60, l=100, r=100, b=20),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_pie, use_container_width=True, width='stretch', key='chart-proporcion')
+        st.plotly_chart(fig_pie, width='stretch', key='chart-proporcion')
 
 
 with tab2:
@@ -224,7 +224,7 @@ with tab2:
         )
         fig_glusosa.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_glusosa, use_container_width=True, width='stretch', key='chart-bm-glucosa')
+        st.plotly_chart(fig_glusosa, width='stretch', key='chart-bm-glucosa')
     
     with c2:
         # Scatter Plot Multivariado
@@ -240,7 +240,7 @@ with tab2:
         )
         fig_multi.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_multi, use_container_width=True, width='stretch', key='chart-bmi-trigliceridos')
+        st.plotly_chart(fig_multi, width='stretch', key='chart-bmi-trigliceridos')
 
 with tab_biom:
     c1, c2 = st.columns(2)
@@ -251,7 +251,7 @@ with tab_biom:
                                 category_orders={'Diabetes_Risk_Category_Mapped':['Bajo Riesgo', 'Prediabetes', 'Alto Riesgo']})
         fig_calorie_risk.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_calorie_risk, use_container_width=True, width='stretch', key='chart-bio1')
+        st.plotly_chart(fig_calorie_risk, width='stretch', key='chart-bio1')
     with c2:
         fig_sugar_risk = px.box(filtered_df, x="Diabetes_Risk_Category_Mapped", y="sugar_intake_grams_per_day",
                                 color="Diabetes_Risk_Category_Mapped", title="Ingesta de Azúcar por Categoría de Riesgo", color_discrete_sequence=riesgo,
@@ -259,7 +259,7 @@ with tab_biom:
                                 category_orders={'Diabetes_Risk_Category_Mapped':['Bajo Riesgo', 'Prediabetes', 'Alto Riesgo']})
         fig_sugar_risk.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_sugar_risk, use_container_width=True, width='stretch', key='chart-bio2')
+        st.plotly_chart(fig_sugar_risk, width='stretch', key='chart-bio2')
 
     st.divider()
     st.subheader("Relación Dieta vs Score de Riesgo")
@@ -273,7 +273,7 @@ with tab_biom:
                             color_discrete_sequence=riesgo)
         fig_cal.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_cal, use_container_width=True, width='stretch', key='chart-dieta')
+        st.plotly_chart(fig_cal, width='stretch', key='chart-dieta')
     with row2_c2:
         fig_sugar_scatter = px.scatter(filtered_df, x="sugar_intake_grams_per_day", y="bmi",
                                         color="diabetes_risk_score",
@@ -282,7 +282,7 @@ with tab_biom:
                                         title="Azúcar vs Riesgo", color_continuous_scale="Temps")
         fig_sugar_scatter.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-        st.plotly_chart(fig_sugar_scatter, use_container_width=True, width='stretch', key='chart-azucar')
+        st.plotly_chart(fig_sugar_scatter, width='stretch', key='chart-azucar')
 
 with tab_habits:
     
@@ -303,7 +303,7 @@ with tab_habits:
     fig_stress.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
 
-    st.plotly_chart(fig_stress, use_container_width=True, width='stretch', key='chart-estres')
+    st.plotly_chart(fig_stress, width='stretch', key='chart-estres')
 
     
     # Comparativa Sueño vs Riesgo
@@ -324,7 +324,7 @@ with tab_habits:
 
     fig_sleep.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
-    st.plotly_chart(fig_sleep, use_container_width=True, width='stretch', key='chart-suenio')
+    st.plotly_chart(fig_sleep, width='stretch', key='chart-suenio')
 
 with tab_regresion:
     # Heatmap de correlación
@@ -347,7 +347,7 @@ with tab_regresion:
     fig_heat.update_layout(margin = dict(t=60, l=40, r=40, b=40),
                   title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
 
-    st.plotly_chart(fig_heat, use_container_width=True, key='chart-corr')
+    st.plotly_chart(fig_heat, key='chart-corr')
 
     st.subheader('Regresión Random Forest')
 
@@ -364,7 +364,7 @@ with tab_regresion:
     fig.update_layout(margin = dict(t=60, l=40, r=40, b=40),
             title={'x':0.5, 'xanchor': 'center', 'font': dict(size=24)})
 
-    st.plotly_chart(fig, use_container_width=True, width='stretch', key='chart-importancia')
+    st.plotly_chart(fig, width='stretch', key='chart-importancia')
 
     st.subheader('Comparativa de Modelos: Random Forest')
     # 2. Modelo con variables seleccionadas
@@ -421,16 +421,15 @@ with tab_regresion:
             aspect="auto"
         )
         fig_cm.update_layout(margin=dict(t=20, b=20, l=20, r=20))
-        st.plotly_chart(fig_cm, use_container_width=True, width='stretch', key='chart-matriz')
+        st.plotly_chart(fig_cm, width='stretch', key='chart-matriz')
 
     with col2:
         st.write("### Reporte de Métricas")
         df_report = pd.DataFrame(report).transpose()
         # Limpiamos el dataframe para mostrar solo métricas principales
         st.dataframe(
-            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0),
-            use_container_width=True, width='stretch'
-        )
+            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0).format(precision=4),
+        width='stretch')
 
     st.info("El modelo utiliza un ajuste de pesos balanceado para compensar clases con pocos datos.")
 
@@ -459,7 +458,7 @@ with tab_regresion:
             aspect="auto", zmin=0.4
         )
         fig_cm.update_layout(margin=dict(t=20, b=20, l=20, r=20))
-        st.plotly_chart(fig_cm, use_container_width=True, width='stretch', key='chart-confusion'
+        st.plotly_chart(fig_cm, width='stretch', key='chart-confusion'
         )
 
     with col2:
@@ -468,7 +467,7 @@ with tab_regresion:
         # Limpiamos el dataframe para mostrar solo métricas principales
         st.dataframe(
             df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0).format(precision=4),
-        use_container_width=True)
+        width='stretch')
         
 
     st.info("El modelo utiliza un ajuste de pesos balanceado para compensar clases con pocos datos.")
