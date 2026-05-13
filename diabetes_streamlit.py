@@ -161,7 +161,7 @@ with tab_demo:
     st.plotly_chart(fig_demo, width='stretch', key='chart-histograma')
 
     filtered_df['Rango_edad'] = pd.cut(x=filtered_df['age'], labels=['18-24', '25-44','45-64','+65'], bins=[0, 24, 44, 64, 100])
-    tabla = filtered_df.groupby(['Gender_Mapped', 'Rango_edad'])['Diabetes_Risk_Category_Mapped'].value_counts().reset_index()
+    tabla = filtered_df.groupby(['Gender_Mapped', 'Rango_edad'],observed=False)['Diabetes_Risk_Category_Mapped'].value_counts().reset_index()
     tabla = tabla.rename(columns={'count':'Cantidad'})
     
     fig_gen_riesgo = px.density_heatmap(
