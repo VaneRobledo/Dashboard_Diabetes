@@ -467,8 +467,8 @@ with tab_regresion:
         df_report = pd.DataFrame(report).transpose()
         # Limpiamos el dataframe para mostrar solo métricas principales
         st.dataframe(
-            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0),
-            use_container_width=True, width='stretch'
-        )
+            df_report.iloc[:-3, :].style.background_gradient(cmap='Purples', subset=['f1-score'], high=1, low=0).format(precision=4),
+        use_container_width=True)
+        
 
     st.info("El modelo utiliza un ajuste de pesos balanceado para compensar clases con pocos datos.")
